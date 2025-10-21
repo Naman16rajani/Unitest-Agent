@@ -7,7 +7,6 @@ import logging
 import math
 from typing import Union, List
 
-
 class Calculator:
     """A simple calculator class with basic mathematical operations"""
     
@@ -27,6 +26,7 @@ class Calculator:
         logging.info(f"Subtracting {b} from {a}, result: {result}")
         self.history.append(f"{a} - {b} = {result}")
         return result
+    
     
     def multiply(self, a: float, b: float) -> float:
         """Multiply two numbers"""

@@ -3,6 +3,7 @@
 CLI Runner for LLM-Optimized CrewAI Unit Test Generation System
 """
 
+import logging
 import sys
 import argparse
 from pathlib import Path

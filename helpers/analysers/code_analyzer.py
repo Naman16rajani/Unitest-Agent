@@ -19,7 +19,7 @@ class CodeAnalyzer:
         self.tree = None
         self.modules = []
 
-    def analyze_file(self, file_path: str) -> Dict[str, Any]:
+    def _analyze_file(self, file_path: str) -> Dict[str, Any]:
         """
         Main method to analyze a Python file and return comprehensive details.
 
