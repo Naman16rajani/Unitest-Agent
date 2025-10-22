@@ -139,7 +139,7 @@ FRAMEWORK_CONFIGS = {
 }
 
 
-def get_default_config(llm_provider: LLMProvider = LLMProvider.GEMINI) -> SystemConfig:
+def get_default_config(llm_provider: LLMProvider = LLMProvider.GEMINI, output_directory: str = "./generated_tests") -> SystemConfig:
     """Get default system configuration with specified LLM provider"""
     llm_config_data = LLM_CONFIGS[llm_provider]
 
@@ -154,7 +154,7 @@ def get_default_config(llm_provider: LLMProvider = LLMProvider.GEMINI) -> System
 
     testing_config = TestingConfig()
 
-    return SystemConfig(llm=llm_config, testing=testing_config)
+    return SystemConfig(llm=llm_config, testing=testing_config, output_directory=output_directory)
 
 
 def update_llm_provider(config: SystemConfig, provider: LLMProvider) -> SystemConfig:

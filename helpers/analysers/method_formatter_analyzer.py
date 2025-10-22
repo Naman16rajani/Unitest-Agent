@@ -1,4 +1,3 @@
-from helpers.logging_config import logger
 from helpers.analysers.code_analyzer import CodeAnalyzer
 from typing import Dict, List, Any, Optional
 
@@ -7,24 +6,7 @@ class MethodFormatterAnalyzer(CodeAnalyzer):
     def __init__(self):
         super().__init__()
 
-    def remove_empty_values(self, obj):
-        """Recursively remove keys with empty values from a dictionary or list."""
-        if isinstance(obj, dict):
-            cleaned = {}
-            for k, v in obj.items():
-                cleaned_value = self.remove_empty_values(v)
-                if cleaned_value not in (None, "", [], {}):
-                    cleaned[k] = cleaned_value
-            return cleaned
-        elif isinstance(obj, list):
-            cleaned_list = []
-            for item in obj:
-                cleaned_item = self.remove_empty_values(item)
-                if cleaned_item not in (None, "", [], {}):
-                    cleaned_list.append(cleaned_item)
-            return cleaned_list
-        else:
-            return obj
+   
 
     def format_analysis(self, file_path: str):
         analyze = self._analyze_file(file_path) or {}
@@ -32,7 +14,6 @@ class MethodFormatterAnalyzer(CodeAnalyzer):
         functions = analyze.get("functions", []) or []
 
         result: List[Dict[str, Any]] = []
-        cleaned_classes = []
 
         for class_dict in classes:
             if not isinstance(class_dict, dict):

@@ -1,8 +1,6 @@
 import ast
-import inspect
 import os
 from typing import Dict, List, Any, Optional, Union
-import re
 
 from helpers.read_file import read_file
 
@@ -18,6 +16,25 @@ class CodeAnalyzer:
         self.source_code = None
         self.tree = None
         self.modules = []
+
+    def remove_empty_values(self, obj):
+        """Recursively remove keys with empty values from a dictionary or list."""
+        if isinstance(obj, dict):
+            cleaned = {}
+            for k, v in obj.items():
+                cleaned_value = self.remove_empty_values(v)
+                if cleaned_value not in (None, "", [], {}):
+                    cleaned[k] = cleaned_value
+            return cleaned
+        elif isinstance(obj, list):
+            cleaned_list = []
+            for item in obj:
+                cleaned_item = self.remove_empty_values(item)
+                if cleaned_item not in (None, "", [], {}, "false", False):
+                    cleaned_list.append(cleaned_item)
+            return cleaned_list
+        else:
+            return obj
 
     def _analyze_file(self, file_path: str) -> Dict[str, Any]:
         """
@@ -45,7 +62,6 @@ class CodeAnalyzer:
     def _load_file(self) -> None:
         """Load the Python file content."""
         self.source_code = read_file(self.file_path)
-
 
     def _parse_ast(self) -> None:
         """Parse the source code into an AST."""

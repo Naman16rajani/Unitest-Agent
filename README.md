@@ -3,6 +3,10 @@
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+
+Code to run 
+uv run python -m pytest --cov=sample_code --cov-report=html --cov-config=sample_code/.coveragerc                             
+
 **UnitCraft** is an intelligent Python unit test generation system powered by Large Language Models (LLMs). It automatically analyzes your Python code and generates comprehensive, syntactically correct unit tests using state-of-the-art AI models.
 
 ## 🚀 Features

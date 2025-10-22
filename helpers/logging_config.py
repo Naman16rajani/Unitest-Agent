@@ -1,11 +1,12 @@
 import logging
 from pathlib import Path
+from datetime import datetime
 
 LOG_FILE = Path("debug.log")
 
 
-def _create_logger():
-    logger = logging.getLogger("UnitestAgent")
+def create_logger(name="UnitestAgent"):
+    logger = logging.getLogger(name)
     if logger.handlers:  # avoid adding handlers multiple times
         return logger
 
@@ -14,7 +15,11 @@ def _create_logger():
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler(str(LOG_FILE))
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = Path(f"./logs/{name}_{timestamp}.log")
+    filename.parent.mkdir(parents=True, exist_ok=True)
+
+    file_handler = logging.FileHandler(filename=filename)
     file_handler.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter(
@@ -29,4 +34,4 @@ def _create_logger():
     return logger
 
 
-logger = _create_logger()
+logger = create_logger()

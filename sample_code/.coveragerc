@@ -1,0 +1,13 @@
+[run]
+source = sample_code
+omit =
+    unittest/*
+    sample_code/unittest/*
+    */__pycache__/*
+    */venv/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    if __name__ == "__main__":

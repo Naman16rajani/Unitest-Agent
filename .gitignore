@@ -16,7 +16,10 @@ test_generation.py
 
 generated_code
 
-promt.txt
+prompt.txt
 
-generated_tests
 debug.log
+logs/
+*.pytest_cache
+
+.DS_Store
