@@ -8,6 +8,7 @@ from helpers.clean_code import clean_code
 
 logger = create_logger("UnitTestAgent")
 
+
 class UnitTestAgent(Agent):
     def __init__(self, llm: BaseLanguageModel):
         unittest_prompt = UnittestAgentPrompt()
@@ -20,10 +21,24 @@ class UnitTestAgent(Agent):
         user_prompt,
         code,
         folder_structure,
+        existing_test_analysis: str = None,
     ) -> tuple[str, int]:
         logger.debug("Invoking UnitTestAgent...")
         logger.debug("Existing Code:\n" + str(code))
         logger.debug("User Prompt:\n" + str(user_prompt))
+
+        prompt_parts = ["folder_structure: \n" + str(folder_structure)]
+
         if code:
-            user_prompt = "folder_structure: \n" + str(folder_structure) + "\nExisting code:\n" + str(code) + "\n" + str(user_prompt)
-        return self._invoke(user_prompt=user_prompt)
+            prompt_parts.append("Existing code:\n" + str(code))
+
+        if existing_test_analysis:
+            logger.debug("Existing Test Analysis:\n" + str(existing_test_analysis))
+            prompt_parts.append(
+                "Analysis of Existing Tests:\n" + str(existing_test_analysis)
+            )
+
+        prompt_parts.append(str(user_prompt))
+
+        full_prompt = "\n".join(prompt_parts)
+        return self._invoke(user_prompt=full_prompt)

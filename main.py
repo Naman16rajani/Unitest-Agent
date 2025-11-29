@@ -16,6 +16,11 @@ from agents.unittest_agent.unittest_agent import UnitTestAgent
 from workflow import workflow
 
 from pathlib import Path
+import os
+import sys
+
+# Add current directory to sys.path to ensure project modules can be imported
+sys.path.append(os.getcwd())
 
 
 def get_tree(
@@ -33,7 +38,7 @@ def get_tree(
         "venv",
         "env",
         ".DS_Store",
-        "logs"
+        "logs",
     ],
 ) -> str:
     """
@@ -77,80 +82,6 @@ def get_tree(
     return tree_str
 
 
-# def main():
-#     """Main CLI function"""
-#     parser = argparse.ArgumentParser(
-#         description="LLM-Optimized CrewAI Unit Test Generation System",
-#         formatter_class=argparse.RawDescriptionHelpFormatter,
-#         epilog="""
-# Examples:
-#   python cli_runner.py                              # Use default sample file
-#   python cli_runner.py sample_code/calculator.py   # Test specific file
-#   python cli_runner.py --llm openai sample.py      # Use OpenAI
-#   python cli_runner.py --help                      # Show this help
-
-# Supported LLM providers: gemini, openai, claude, ollama
-#         """,
-#     )
-
-#     parser.add_argument(
-#         "file",
-#         nargs="?",
-#         default="sample_code/calculator.py",
-#         help="Python file to generate tests for (default: sample_code/calculator.py)",
-#     )
-
-#     parser.add_argument(
-#         "--llm",
-#         choices=["gemini", "openai", "claude", "ollama"],
-#         default="gemini",
-#         help="LLM provider to use (default: gemini)",
-#     )
-
-#     parser.add_argument(
-#         "--output",
-#         default="sample_code/generated_tests",
-#         help="Output directory for generated tests (default: sample_code/generated_tests)",
-#     )
-
-#     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
-
-#     args = parser.parse_args()
-
-#     # Validate input file
-#     if not Path(args.file).exists():
-#         print(f"❌ Error: File '{args.file}' not found")
-#         print("\nTip: Make sure the file exists or try the default:")
-#         print("python cli_runner.py")
-#         sys.exit(1)
-
-#     # Header
-#     print("🚀 LLM-Optimized AI Unit Test Generation System")
-#     print("=" * 60)
-#     print(f"📄 Input file: {args.file}")
-#     print(f"🤖 LLM provider: {args.llm}")
-#     print(f"📁 Output directory: {args.output}")
-#     print()
-
-#     try:
-#         # Initialize the generator with the selected LLM provider
-#         llm_provider_enum = getattr(LLMProvider, args.llm.upper())
-#         config = get_default_config(llm_provider_enum)
-#         llm_instance = create_llm_instance(config.llm)
-#         file = args.file
-
-#         workflow(llm_instance,file)
-
-#     except Exception as e:
-#         print(f"\n❌ Unexpected error: {str(e)}")
-#         print("\n🔧 Troubleshooting tips:")
-#         print("   • Check your API key is set correctly")
-#         print("   • Verify internet connection")
-#         print("   • Try with a different LLM provider")
-#         print("   • Check the file syntax is valid")
-#         sys.exit(1)
-
-
 def main():
     """Main CLI function"""
     parser = argparse.ArgumentParser(
@@ -158,11 +89,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python cli_runner.py                              # Use default sample file
-  python cli_runner.py sample_code/calculator.py   # Test specific file
-  python cli_runner.py sample_code/                # Process all files in folder
-  python cli_runner.py --llm openai sample.py      # Use OpenAI
-  python cli_runner.py --help                      # Show this help
+  python main.py                              # Use default sample file
+  python main.py sample_code/calculator.py   # Test specific file
+  python main.py sample_code/                # Process all files in folder
+  python main.py --llm openai sample.py      # Use OpenAI
+  python main.py --help                      # Show this help
 
 Supported LLM providers: gemini, openai, claude, ollama
         """,
@@ -210,8 +141,11 @@ Supported LLM providers: gemini, openai, claude, ollama
     try:
         # Initialize LLM provider
         llm_provider_enum = getattr(LLMProvider, args.llm.upper())
+        print(f"🔧 Initializing LLM provider: {llm_provider_enum.value}...")
         config = get_default_config(llm_provider_enum, output_directory=args.output)
+        print(f"✅ {config}\n")
         llm_instance = create_llm_instance(config.llm)
+        print("✅ LLM instance created successfully\n")
 
         # Collect files
         files_to_process = []
@@ -237,20 +171,23 @@ Supported LLM providers: gemini, openai, claude, ollama
                 continue  # Skip already generated test files
             print(f"🧩 Processing: {file}")
             relative_base_path = file.parent.relative_to(base_path)
-            file_path= None
+            file_path = None
             if relative_base_path == Path("."):
                 relative_base_path = Path("")
-                file_path = Path(config.output_directory) 
+                file_path = Path(config.output_directory)
             else:
-                file_path = Path(config.output_directory) / f"test_{file.parent.relative_to(base_path)}"
+                relative_path = file.parent.relative_to(base_path)
+                test_relative_path = Path(
+                    *[f"test_{part}" for part in relative_path.parts if part != "."]
+                )
+                file_path = Path(config.output_directory) / test_relative_path
             file_path.mkdir(parents=True, exist_ok=True)
             save_path = file_path / f"test_{file.name}"
             print("creating path:", save_path)
 
             token += workflow(llm_instance, str(file), save_path, folder_structure)
             print("✅ Done\n")
-        print("🎉 All tasks completed!"
-              f"\nTotal tokens used: {token}")
+        print("🎉 All tasks completed!" f"\nTotal tokens used: {token}")
 
     except Exception as e:
         print(f"\n❌ Unexpected error: {str(e)}")

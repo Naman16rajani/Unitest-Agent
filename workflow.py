@@ -8,9 +8,20 @@ from helpers.check_syntax import check_syntax
 from helpers.clean_code import clean_code
 from helpers.read_file import read_file
 from helpers.save_code import save_code
+from helpers.test_runner import (
+    run_pytest_with_coverage,
+    display_coverage_summary,
+    display_test_results,
+)
+from pathlib import Path
 
 logger = create_logger("Workflow")
 MAX_AGENT_FLOW_COUNT = 3
+
+
+from agents.existing_test_analyzer_agent.existing_test_analyzer_agent import (
+    ExistingTestAnalyzerAgent,
+)
 
 
 def workflow(llm_instance, file, save_path, folder_structure) -> int:
@@ -32,6 +43,7 @@ def workflow(llm_instance, file, save_path, folder_structure) -> int:
 
             unit_test_agent = UnitTestAgent(llm_instance)
             mock_class_agent = MockClassAgent(llm_instance)
+            existing_test_analyzer_agent = ExistingTestAnalyzerAgent(llm_instance)
             print("Generating Mock Classes...")
             for classes in class_analysis_data:
                 print("Generating mock class for: " + classes["class_name"])
@@ -50,17 +62,30 @@ def workflow(llm_instance, file, save_path, folder_structure) -> int:
             print("Generating Unit Tests...")
             for methods in analysis_data:
                 content = ""
+                existing_test_analysis = None
                 print("Generating unit tests for: " + methods["method_name"])
                 if save_path.exists():
                     content = read_file(save_path)
                     logger.debug("Content Data:\n" + content)
 
+                    # Analyze existing tests
+                    print("Analyzing existing tests...")
+                    existing_test_analysis, token_inc = (
+                        existing_test_analyzer_agent.invoke(content)
+                    )
+                    token += token_inc
+                    logger.debug(
+                        "Existing Test Analysis:\n" + str(existing_test_analysis)
+                    )
+
                 else:
                     content = ""
+
                 code, token_inc = unit_test_agent.invoke(
                     methods,
                     code=content,
                     folder_structure=folder_structure,
+                    existing_test_analysis=existing_test_analysis,
                 )
                 code = clean_code(code)
                 logger.debug("Generated Code:\n" + code)
@@ -68,7 +93,10 @@ def workflow(llm_instance, file, save_path, folder_structure) -> int:
                 while not check_syntax(code) and i < MAX_AGENT_FLOW_COUNT:
                     print("Regenerating unittest, attempt " + str(i + 1))
                     code, token_inc = unit_test_agent.invoke(
-                        methods, code=read_file(save_path), folder_structure=folder_structure
+                        methods,
+                        code=read_file(save_path),
+                        folder_structure=folder_structure,
+                        existing_test_analysis=existing_test_analysis,
                     )
                     token += token_inc
                     i += 1
@@ -78,7 +106,36 @@ def workflow(llm_instance, file, save_path, folder_structure) -> int:
                 token += token_inc
 
                 save_code(save_path, code)
-            print("unittest is generated. Tokens used: " + str(token))
+
+            print("✅ Unit tests generated successfully!")
+            print(f"📊 Tokens used: {token}\n")
+
+            # Run pytest with coverage
+            print("=" * 60)
+            print("🧪 Running Tests with Coverage...")
+            print("=" * 60)
+
+            source_file = Path(file)
+            test_file = Path(save_path)
+
+            success, output, coverage_pct = run_pytest_with_coverage(
+                test_file_path=test_file,
+                source_file_path=source_file,
+                htmlcov_dir="htmlcov",
+            )
+
+            # Display test results
+            display_test_results(output, success)
+
+            # Display coverage summary
+            display_coverage_summary(output)
+
+            # Show path to HTML report
+            htmlcov_path = Path("htmlcov") / "index.html"
+            if htmlcov_path.exists():
+                print(f"📄 HTML Coverage Report: {htmlcov_path.absolute()}")
+                print(f"   Open in browser: file://{htmlcov_path.absolute()}\n")
+
             return token
 
         else:

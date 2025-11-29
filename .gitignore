@@ -6,7 +6,8 @@ dist/
 wheels/
 *.egg-info
 .idea
-
+.vscode
+.
 # Virtual environments
 .venv
 .env
@@ -14,8 +15,8 @@ wheels/
 test_analyzer.py
 test_generation.py
 
-generated_code
-
+generated_*
+htmlcov
 prompt.txt
 
 debug.log
@@ -23,3 +24,4 @@ logs/
 *.pytest_cache
 
 .DS_Store
+list

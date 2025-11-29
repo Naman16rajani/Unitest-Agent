@@ -19,7 +19,6 @@ class Agent(ABC):
         self.llm = llm
         self.system_prompt = system_prompt
 
-    
     def _invoke(self, user_prompt: str):
         logger.debug("User prompt:\n" + str(user_prompt))
 
@@ -36,7 +35,7 @@ class Agent(ABC):
         else:
             response_content = str(response)
 
-        output_tokens = (
+        input_tokens = (
             self.llm.get_num_tokens(response_content)
             if hasattr(self.llm, "get_num_tokens")
             else 0
@@ -44,4 +43,4 @@ class Agent(ABC):
 
         response_content = clean_code(response_content)
 
-        return response_content, output_tokens
+        return response_content, input_tokens

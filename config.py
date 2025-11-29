@@ -109,7 +109,7 @@ LLM_CONFIGS = {
         "max_tokens": 4096,
     },
     LLMProvider.OLLAMA: {
-        "model": "codellama:13b",
+        "model": "qwen3:8b",
         "base_url": "http://localhost:11434",
         "temperature": 0.1,
         "max_tokens": 4096,
@@ -142,15 +142,25 @@ FRAMEWORK_CONFIGS = {
 def get_default_config(llm_provider: LLMProvider = LLMProvider.GEMINI, output_directory: str = "./generated_tests") -> SystemConfig:
     """Get default system configuration with specified LLM provider"""
     llm_config_data = LLM_CONFIGS[llm_provider]
-
-    llm_config = LLMConfig(
-        provider=llm_provider,
-        model=llm_config_data["model"],
-        api_key=os.getenv(llm_config_data.get("api_key_env")),
-        base_url=llm_config_data.get("base_url"),
-        temperature=llm_config_data["temperature"],
-        max_tokens=llm_config_data["max_tokens"],
-    )
+    print(llm_config_data)
+    if llm_provider == LLMProvider.OLLAMA:
+        print(f"🤖 Using Ollama model: {llm_config_data['model']}")
+        llm_config = LLMConfig(
+            provider=llm_provider,
+            model=llm_config_data["model"],
+            base_url=llm_config_data.get("base_url"),
+            temperature=llm_config_data["temperature"],
+            max_tokens=llm_config_data["max_tokens"],
+        )
+    else:
+        llm_config = LLMConfig(
+            provider=llm_provider,
+            model=llm_config_data["model"],
+            api_key=os.getenv(llm_config_data.get("api_key_env")),
+            base_url=llm_config_data.get("base_url"),
+            temperature=llm_config_data["temperature"],
+            max_tokens=llm_config_data["max_tokens"],
+        )
 
     testing_config = TestingConfig()
 
@@ -270,19 +280,21 @@ def create_llm_instance(llm_config: LLMConfig) -> Any:
     #             "Please install langchain-anthropic: pip install langchain-anthropic"
     #         )
 
-    # elif llm_config.provider == LLMProvider.OLLAMA:
-    #     try:
-    #         from langchain_community.llms import Ollama
+    elif llm_config.provider == LLMProvider.OLLAMA:
+        try:
 
-    #         return Ollama(
-    #             model=llm_config.model or "codellama",
-    #             base_url=llm_config.base_url or "http://localhost:11434",
-    #             temperature=llm_config.temperature,
-    #         )
-    #     except ImportError:
-    #         raise ImportError(
-    #             "Please install langchain-community: pip install langchain-community"
-    #         )
+            from langchain_ollama import ChatOllama
+            print(f"🤖 Using Ollama model: {llm_config.model}")
+            return ChatOllama(
+                model=llm_config.model,
+                validate_model_on_init=True,
+                temperature=llm_config.temperature,
+                reasoning=True
+            )
+        except ImportError:
+            raise ImportError(
+                "Please install langchain-community: pip install langchain-community"
+            )
 
     else:
         raise ValueError(f"Unsupported LLM provider: {llm_config.provider}")
